@@ -1,35 +1,19 @@
-const API = "/admin";
-
-function q(id) {
-  return document.getElementById(id).value;
-}
-
-function out(msg) {
-  document.getElementById("output").textContent = msg;
-}
-
-async function send(path, params) {
-  const url = `${API}/${path}?token=${q("token")}&${params}`;
-  const res = await fetch(url);
-  out(await res.text());
-}
-
 function addKey() {
-  send("add", `key=${q("key")}&days=${q("days")}`);
-}
+  const key = document.getElementById("key").value;
+  const days = document.getElementById("days").value;
 
-function extendKey() {
-  send("extend", `key=${q("key")}&days=${q("days")}`);
-}
-
-function resetHWID() {
-  send("reset_hwid", `key=${q("key")}`);
-}
-
-function disableKey() {
-  send("disable", `key=${q("key")}`);
-}
-
-function enableKey() {
-  send("enable", `key=${q("key")}`);
+  fetch("/admin/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": "HUTAO_ISTRI_HIRO"
+    },
+    body: JSON.stringify({ key, days })
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById("out").textContent =
+      JSON.stringify(d, null, 2);
+  })
+  .catch(e => alert(e));
 }
