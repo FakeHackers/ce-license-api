@@ -32,6 +32,13 @@ function ban() {
   }).then(show);
 }
 
+function unban() {
+  post("/admin/unban", {
+    key: key.value
+  }).then(show);
+}
+
+
 // DOWNLOAD DB (GET + HEADER)
 function backup() {
   fetch("/admin/download-db", {
