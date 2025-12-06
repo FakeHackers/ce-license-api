@@ -51,4 +51,5 @@ app.get("/check", (req, res) => {
 // ================== RUN ==================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () =>
-  console.log("✅ License
+  console.log("License API running on port", PORT)
+);
