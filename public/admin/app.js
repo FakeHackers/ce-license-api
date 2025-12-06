@@ -38,6 +38,13 @@ function unban() {
   }).then(show);
 }
 
+function resetHwid() {
+  post("/admin/reset-hwid", {
+    key: key.value
+  }).then(show);
+}
+
+
 
 // DOWNLOAD DB (GET + HEADER)
 function backup() {
