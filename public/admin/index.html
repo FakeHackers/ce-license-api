@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>License Admin</title>
+  <title>What Are You Doing?</title>
   <style>
     body {
       background:#0f0f16;
@@ -17,7 +17,7 @@
       background:#1b1b2a;
       padding:20px;
       border-radius:10px;
-      width:340px;
+      width:360px;
       text-align:center;
     }
     input {
@@ -37,28 +37,32 @@
       color:white;
       cursor:pointer;
     }
-    button.gray {
-      background:#444;
+    button.gray { background:#444; }
+    button.red { background:#c0392b; }
+    pre {
+      text-align:left;
+      background:#0f0f16;
+      padding:8px;
+      border-radius:6px;
+      max-height:150px;
+      overflow:auto;
     }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h3>🔐 License Admin</h3>
+  <h3>🔐 Admin Only</h3>
 
-  <!-- ADMIN TOKEN -->
   <input id="token" type="password" placeholder="Admin Token">
-
-  <!-- LICENSE -->
   <input id="key" placeholder="License Key">
-  <input id="days" type="number" placeholder="Days (for Add)">
+  <input id="days" type="number" placeholder="Days (Add license)">
 
   <button onclick="add()">Add License</button>
   <button onclick="ban()">Ban License</button>
   <button onclick="unban()">Unban License</button>
   <button class="red" onclick="resetHwid()">Reset HWID</button>
-  <button class="gray" onclick="backup()">Download DB</button>
+  <button class="gray" onclick="list()">List Licenses</button>
 
   <pre id="out"></pre>
 </div>
