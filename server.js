@@ -6,7 +6,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ================== CONFIG ==================
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "HUTAO_ISTRI_HIRO";
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+if (!ADMIN_TOKEN) {
+  throw new Error("ADMIN_TOKEN NOT SET");
+}
 
 // ================== DATABASE (sementara) ==================
 const db = {};
