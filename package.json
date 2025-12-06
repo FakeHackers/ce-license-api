@@ -1,19 +1,16 @@
 {
   "name": "ce-license-api",
   "version": "1.0.0",
-  "description": "Cheat Engine License API with Admin Panel",
+  "description": "Cheat Engine License API with Admin Panel (GitHub JSON store)",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-  "express": "^4.19.2",
-  "node-fetch": "^3.3.2"
-}
-
-
+    "express": "^4.19.2"
   },
   "engines": {
     "node": ">=18"
   }
+}
