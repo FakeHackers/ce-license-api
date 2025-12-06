@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>License Panel</title>
+  <meta charset="utf-8">
+</head>
+<body>
+
+<h2>🔥 License Management Panel</h2>
+
+<label>Admin Token:</label><br>
+<input id="token"><br><br>
+
+<label>License Key:</label><br>
+<input id="key"><br><br>
+
+<label>Days:</label><br>
+<input id="days" type="number"><br><br>
+
+<button onclick="addKey()">Add Key</button>
+<button onclick="extendKey()">Extend</button>
+<button onclick="resetHWID()">Reset HWID</button>
+<button onclick="disableKey()">Disable</button>
+<button onclick="enableKey()">Enable</button>
+
+<pre id="output"></pre>
+
+<script src="app.js"></script>
+</body>
+</html>
