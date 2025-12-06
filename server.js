@@ -1,25 +1,35 @@
-import express from "express";
-import fs from "fs";
-
+const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const path = require("path");
 
-const LICENSES = {
-  "HUTAO-TEST-001": "2026-12-31"
+app.use(express.static("public"));
+
+const db = {
+  "HUTAO1": { expire: "2026-12-31", hwid: null },
+  "HUTAO2": { expire: "2025-12-31", hwid: null },
 };
 
-app.get("/api/check", (req, res) => {
-  const key = req.query.key;
-  if (!key) return res.status(400).send("NO_KEY");
+app.get("/check", (req, res) => {
+  const { key, hwid } = req.query;
+  if (!key || !hwid) return res.send("INVALID|PARAM");
 
-  const exp = LICENSES[key];
-  if (!exp) return res.send("INVALID");
+  const lic = db[key];
+  if (!lic) return res.send("INVALID|KEY");
 
-  return res.send(`VALID|${exp}`);
+  // realtime server date
+  const today = new Date().toISOString().slice(0, 10);
+  if (today > lic.expire) return res.send("EXPIRED");
+
+  // HWID bind
+  if (!lic.hwid) {
+    lic.hwid = hwid;                 // bind pertama
+  } else if (lic.hwid !== hwid) {
+    return res.send("INVALID|HWID"); // pindah device
+  }
+
+  return res.send("VALID|" + lic.expire);
 });
 
-app.use("/script", express.static("public/script"));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log("License API running on", PORT));
 
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
