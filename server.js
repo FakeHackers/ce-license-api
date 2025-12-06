@@ -1,138 +1,258 @@
 const express = require("express");
-const fetch = (...a) => import("node-fetch").then(({default:f})=>f(...a));
-const crypto = require("crypto");
-const app = express();
+const path = require("path");
 
+const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ========= CONFIG =========
+// =============== CONFIG ===============
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
-const GH_TOKEN = process.env.GITHUB_TOKEN;
-const GH_REPO = process.env.GITHUB_REPO;
-const GH_FILE = process.env.GITHUB_FILE;
+const GH_TOKEN = process.env.GH_TOKEN;                 // PAT GitHub
+const GH_REPO_OWNER = process.env.GH_REPO_OWNER || "FakeHackers";
+const GH_REPO_NAME  = process.env.GH_REPO_NAME  || "ce-license-store";
+const GH_FILE_PATH  = process.env.GH_FILE_PATH  || "licenses.json";
+const GH_BRANCH     = process.env.GH_BRANCH     || "main";
 
-if (!ADMIN_TOKEN || !GH_TOKEN || !GH_REPO || !GH_FILE)
-  throw new Error("ENV NOT SET");
+if (!ADMIN_TOKEN) throw new Error("ADMIN_TOKEN NOT SET");
+if (!GH_TOKEN) throw new Error("GH_TOKEN NOT SET");
 
-// ========= UTIL =========
-const hashHWID = h =>
-  crypto.createHash("sha256").update(h).digest("hex");
+const GITHUB_API_BASE = "https://api.github.com";
 
-const GH_API = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+// cache sederhana biar gak spam GitHub
+let cache = {
+  data: null,    // object licenses
+  sha: null,     // file sha git
+  loadedAt: 0
+};
 
-async function loadDB() {
-  const r = await fetch(GH_API, {
+// =============== GITHUB HELPER ===============
+async function githubGetFile() {
+  const url = `${GITHUB_API_BASE}/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${GH_FILE_PATH}?ref=${GH_BRANCH}`;
+
+  const resp = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${GH_TOKEN}`,
-      Accept: "application/vnd.github+json"
+      "Authorization": `Bearer ${GH_TOKEN}`,
+      "Accept": "application/vnd.github+json",
+      "User-Agent": "ce-license-api"
     }
   });
 
-  if (r.status === 404) {
-    return { data: {}, sha: null };
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error("GitHub get error: " + resp.status + " " + txt);
   }
 
-  const j = await r.json();
-  const data = JSON.parse(
-    Buffer.from(j.content, "base64").toString()
-  );
-  return { data, sha: j.sha };
+  const json = await resp.json();
+  const content = Buffer.from(json.content, "base64").toString("utf8");
+  cache = {
+    data: content.trim() ? JSON.parse(content) : {},
+    sha: json.sha,
+    loadedAt: Date.now()
+  };
 }
 
-async function saveDB(data, sha) {
-  await fetch(GH_API, {
+async function githubSaveFile(data) {
+  const url = `${GITHUB_API_BASE}/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${GH_FILE_PATH}`;
+
+  const content = Buffer.from(JSON.stringify(data, null, 2), "utf8").toString("base64");
+
+  const body = {
+    message: "Update licenses via admin panel",
+    content,
+    sha: cache.sha,
+    branch: GH_BRANCH
+  };
+
+  const resp = await fetch(url, {
     method: "PUT",
     headers: {
-      Authorization: `Bearer ${GH_TOKEN}`,
-      "Content-Type": "application/json"
+      "Authorization": `Bearer ${GH_TOKEN}`,
+      "Accept": "application/vnd.github+json",
+      "User-Agent": "ce-license-api"
     },
-    body: JSON.stringify({
-      message: "update licenses",
-      content: Buffer.from(JSON.stringify(data, null, 2)).toString("base64"),
-      sha
-    })
+    body: JSON.stringify(body)
   });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error("GitHub save error: " + resp.status + " " + txt);
+  }
+
+  const json = await resp.json();
+  cache.sha = json.content.sha;
+  cache.data = data;
+  cache.loadedAt = Date.now();
 }
 
+async function getLicenses() {
+  // reload tiap 30 detik
+  if (!cache.data || Date.now() - cache.loadedAt > 30000) {
+    await githubGetFile();
+  }
+  return cache.data;
+}
+
+// =============== ADMIN AUTH ===============
 function adminAuth(req, res, next) {
-  if (req.headers["x-admin-token"] !== ADMIN_TOKEN)
+  const token = req.headers["x-admin-token"];
+  if (!token || token !== ADMIN_TOKEN) {
     return res.status(401).json({ error: "UNAUTHORIZED" });
+  }
   next();
 }
 
-// ========= CHECK =========
+// =============== LICENSE CHECK (dipanggil CE) ===============
 app.get("/check", async (req, res) => {
-  const { key, hwid } = req.query;
-  if (!key || !hwid) return res.send("ERROR|PARAM|");
+  try {
+    const { key, hwid } = req.query;
+    if (!key || !hwid) return res.send("ERROR|PARAM|");
 
-  const { data, sha } = await loadDB();
-  const lic = data[key];
-  const now = new Date().toISOString();
+    const licenses = await getLicenses();
+    const lic = licenses[key];
 
-  if (!lic) return res.send("ERROR|NO_KEY|");
-  if (lic.banned) return res.send("ERROR|BANNED|");
-  if (now.slice(0,10) > lic.expire)
-    return res.send("ERROR|EXPIRED|" + lic.expire);
+    if (!lic)        return res.send("ERROR|NO_KEY|");
+    if (lic.banned)  return res.send("ERROR|BANNED|");
 
-  const hw = hashHWID(hwid);
+    const today = new Date().toISOString().slice(0, 10);
+    if (today > lic.expire) {
+      return res.send("ERROR|EXPIRED|" + lic.expire);
+    }
 
-  if (!lic.hwid_hash) lic.hwid_hash = hw;
-  else if (lic.hwid_hash !== hw)
-    return res.send("ERROR|HWID_MISMATCH|");
+    // bind HWID
+    if (!lic.hwid) {
+      lic.hwid = hwid;
+      await githubSaveFile(licenses);
+    } else if (lic.hwid !== hwid) {
+      return res.send("ERROR|HWID_MISMATCH|");
+    }
 
-  lic.use_count++;
-  lic.last_seen = now;
-
-  await saveDB(data, sha);
-  return res.send("VALID|OK|" + lic.expire);
+    return res.send("VALID|OK|" + lic.expire);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send("ERROR|SERVER|");
+  }
 });
 
-// ========= ADMIN =========
+// =============== ADMIN API ===============
 app.post("/admin/add", adminAuth, async (req, res) => {
-  const { key, days } = req.body;
-  const { data, sha } = await loadDB();
+  try {
+    const { key, days } = req.body;
+    if (!key || !days) return res.json({ ok: false, error: "PARAM" });
 
-  const d = new Date();
-  d.setDate(d.getDate() + Number(days));
+    const licenses = await getLicenses();
+    const d = new Date();
+    d.setDate(d.getDate() + Number(days));
 
-  data[key] = {
-    expire: d.toISOString().slice(0,10),
-    hwid_hash: null,
-    banned: false,
-    use_count: 0,
-    last_seen: null
-  };
+    licenses[key] = {
+      expire: d.toISOString().slice(0, 10),
+      hwid: null,
+      banned: false
+    };
 
-  await saveDB(data, sha);
-  res.json({ ok: true });
+    await githubSaveFile(licenses);
+    res.json({ ok: true, action: "add", key, expire: licenses[key].expire });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
 });
 
 app.post("/admin/ban", adminAuth, async (req, res) => {
-  const { data, sha } = await loadDB();
-  if (data[req.body.key]) data[req.body.key].banned = true;
-  await saveDB(data, sha);
-  res.json({ ok: true });
+  try {
+    const { key } = req.body;
+    const licenses = await getLicenses();
+    if (!licenses[key]) return res.json({ ok: false, error: "NO_KEY" });
+
+    licenses[key].banned = true;
+    await githubSaveFile(licenses);
+    res.json({ ok: true, action: "ban", key });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
 });
 
 app.post("/admin/unban", adminAuth, async (req, res) => {
-  const { data, sha } = await loadDB();
-  if (data[req.body.key]) data[req.body.key].banned = false;
-  await saveDB(data, sha);
-  res.json({ ok: true });
+  try {
+    const { key } = req.body;
+    const licenses = await getLicenses();
+    if (!licenses[key]) return res.json({ ok: false, error: "NO_KEY" });
+
+    licenses[key].banned = false;
+    await githubSaveFile(licenses);
+    res.json({ ok: true, action: "unban", key });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
 });
 
 app.post("/admin/reset-hwid", adminAuth, async (req, res) => {
-  const { data, sha } = await loadDB();
-  if (data[req.body.key]) data[req.body.key].hwid_hash = null;
-  await saveDB(data, sha);
-  res.json({ ok: true });
+  try {
+    const { key } = req.body;
+    const licenses = await getLicenses();
+    if (!licenses[key]) return res.json({ ok: false, error: "NO_KEY" });
+
+    licenses[key].hwid = null;
+    await githubSaveFile(licenses);
+    res.json({ ok: true, action: "reset_hwid", key });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
 });
 
-app.get("/admin/list", adminAuth, async (_, res) => {
-  const { data } = await loadDB();
-  res.json(data);
+app.post("/admin/delete", adminAuth, async (req, res) => {
+  try {
+    const { key } = req.body;
+    const licenses = await getLicenses();
+    if (!licenses[key]) return res.json({ ok: false, error: "NO_KEY" });
+
+    delete licenses[key];
+    await githubSaveFile(licenses);
+    res.json({ ok: true, action: "delete", key });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
 });
 
+app.get("/admin/list", adminAuth, async (req, res) => {
+  try {
+    const licenses = await getLicenses();
+    res.json(licenses);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
+});
+
+// download JSON sebagai backup (opsional)
+app.get("/admin/download-db", adminAuth, async (req, res) => {
+  try {
+    const licenses = await getLicenses();
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="licenses.json"'
+    );
+    res.send(JSON.stringify(licenses, null, 2));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
+});
+
+// =============== STATIC FILES ===============
+app.use("/script", express.static("public/script"));
+app.use(express.static("public"));
+
+app.get("/admin", (_, res) =>
+  res.sendFile(path.join(__dirname, "public/admin/index.html"))
+);
+
+// =============== RUN ===============
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("API running on", PORT));
+app.listen(PORT, () =>
+  console.log("License API running on port", PORT)
+);
