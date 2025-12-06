@@ -1,5 +1,5 @@
-function token() {
-  const t = document.getElementById("token").value;
+function getToken() {
+  const t = document.getElementById("token").value.trim();
   if (!t) {
     alert("Admin Token required");
     throw "NO_TOKEN";
@@ -7,21 +7,26 @@ function token() {
   return t;
 }
 
-function post(url, body) {
+function post(url, data) {
   return fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-token": token()
+      "x-admin-token": getToken()
     },
-    body: JSON.stringify(body || {})
-  }).then(r => r.json());
-}
+    body: JSON.stringify(data || {})
+  })
+  .then(async r => {
+    const txt = await r.text();
+    let json;
+    try { json = JSON.parse(txt); }
+    catch { json = { raw: txt }; }
 
-function get(url) {
-  return fetch(url, {
-    headers: { "x-admin-token": token() }
-  }).then(r => r.json());
+    if (!r.ok) {
+      throw json || { error: "HTTP_" + r.status };
+    }
+    return json;
+  });
 }
 
 function show(res) {
@@ -29,26 +34,43 @@ function show(res) {
     JSON.stringify(res, null, 2);
 }
 
-// ===== Actions =====
-function add() {
+// ==== ACTIONS ====
+function addLic() {
   post("/admin/add", {
-    key: key.value,
-    days: days.value
-  }).then(show);
+    key: document.getElementById("key").value.trim(),
+    days: Number(document.getElementById("days").value || 0)
+  }).then(show).catch(show);
 }
 
 function ban() {
-  post("/admin/ban", { key: key.value }).then(show);
+  post("/admin/ban", {
+    key: document.getElementById("key").value.trim()
+  }).then(show).catch(show);
 }
 
 function unban() {
-  post("/admin/unban", { key: key.value }).then(show);
+  post("/admin/unban", {
+    key: document.getElementById("key").value.trim()
+  }).then(show).catch(show);
 }
 
 function resetHwid() {
-  post("/admin/reset-hwid", { key: key.value }).then(show);
+  post("/admin/reset-hwid", {
+    key: document.getElementById("key").value.trim()
+  }).then(show).catch(show);
 }
 
-function list() {
-  get("/admin/list").then(show);
+// download JSON (GET + header)
+function backup() {
+  const token = getToken();
+  fetch("/admin/download-db", {
+    headers: { "x-admin-token": token }
+  })
+    .then(r => r.blob())
+    .then(blob => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "licenses.json";
+      a.click();
+    });
 }
