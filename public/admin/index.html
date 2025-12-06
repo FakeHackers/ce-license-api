@@ -1,52 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Admin Panel</title>
-<style>
-body {
-  background:#111;
-  color:#fff;
-  font-family:Arial;
-}
-.container {
-  width:420px;
-  margin:120px auto;
-  background:#1e1e1e;
-  padding:20px;
-  border-radius:10px;
-  text-align:center;
-}
-input, button {
-  width:100%;
-  padding:8px;
-  margin:6px 0;
-  border-radius:5px;
-  border:none;
-}
-button {
-  background:#ff5c8a;
-  color:#fff;
-  cursor:pointer;
-}
-</style>
+  <title>License Admin</title>
+  <style>
+    body {
+      background:#0f0f16;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      font-family:Arial;
+    }
+    .box {
+      background:#1b1b2a;
+      padding:20px;
+      border-radius:10px;
+      width:300px;
+      text-align:center;
+    }
+    button { margin:5px; }
+  </style>
 </head>
 <body>
-
-<div class="container">
-  <h2>Admin License Panel</h2>
-
-  <input id="token" type="password" placeholder="Admin Token">
-  <input id="key" placeholder="License Key">
-  <input id="days" type="number" placeholder="Days (+)">
-
-  <button onclick="add()">Add Key</button>
-  <button onclick="extend()">Extend</button>
-  <button onclick="ban(true)">Ban</button>
-  <button onclick="ban(false)">Unban</button>
-  <button onclick="del()">Delete</button>
-
-  <pre id="out"></pre>
+<div class="box">
+  <h3>License Admin</h3>
+  <input id="key" placeholder="License Key"><br>
+  <input id="days" placeholder="Days"><br><br>
+  <button onclick="add()">Add</button>
+  <button onclick="ban()">Ban</button>
+  <button onclick="backup()">Backup DB</button>
 </div>
 
 <script src="app.js"></script>
