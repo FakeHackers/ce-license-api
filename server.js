@@ -1,7 +1,8 @@
 const express = require("express");
 const path = require("path");
-const app = express();
+const Database = require("better-sqlite3");
 
+const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -11,8 +12,18 @@ if (!ADMIN_TOKEN) {
   throw new Error("ADMIN_TOKEN NOT SET");
 }
 
-// ================== DATABASE (sementara) ==================
-const db = {};
+// ================== DATABASE SQLITE ==================
+const db = new Database("license.db");
+
+// buat table kalau belum ada
+db.prepare(`
+CREATE TABLE IF NOT EXISTS licenses (
+  key TEXT PRIMARY KEY,
+  expire TEXT NOT NULL,
+  hwid TEXT,
+  banned INTEGER DEFAULT 0
+)
+`).run();
 
 // ================== MIDDLEWARE AUTH ==================
 function adminAuth(req, res, next) {
@@ -28,15 +39,23 @@ app.get("/check", (req, res) => {
   const { key, hwid } = req.query;
   if (!key || !hwid) return res.send("ERROR|PARAM|");
 
-  const lic = db[key];
+  const lic = db
+    .prepare("SELECT * FROM licenses WHERE key = ?")
+    .get(key);
+
   if (!lic) return res.send("ERROR|NO_KEY|");
   if (lic.banned) return res.send("ERROR|BANNED|");
 
   const today = new Date().toISOString().slice(0, 10);
-  if (today > lic.expire) return res.send("ERROR|EXPIRED|" + lic.expire);
+  if (today > lic.expire) {
+    return res.send("ERROR|EXPIRED|" + lic.expire);
+  }
 
+  // bind hwid pertama kali
   if (!lic.hwid) {
-    lic.hwid = hwid;
+    db.prepare(
+      "UPDATE licenses SET hwid = ? WHERE key = ?"
+    ).run(hwid, key);
   } else if (lic.hwid !== hwid) {
     return res.send("ERROR|HWID_MISMATCH|");
   }
@@ -51,47 +70,65 @@ app.post("/admin/add", adminAuth, (req, res) => {
 
   const d = new Date();
   d.setDate(d.getDate() + Number(days));
+  const expire = d.toISOString().slice(0, 10);
 
-  db[key] = {
-    expire: d.toISOString().slice(0, 10),
-    hwid: null,
-    banned: false
-  };
+  db.prepare(`
+    INSERT OR REPLACE INTO licenses
+    (key, expire, hwid, banned)
+    VALUES (?, ?, NULL, 0)
+  `).run(key, expire);
 
-  res.json({ ok: true, action: "add", key });
+  res.json({ ok: true, action: "add", key, expire });
 });
 
 app.post("/admin/extend", adminAuth, (req, res) => {
   const { key, days } = req.body;
-  if (!db[key]) return res.json({ ok: false });
 
-  const d = new Date(db[key].expire);
+  const lic = db
+    .prepare("SELECT * FROM licenses WHERE key = ?")
+    .get(key);
+  if (!lic) return res.json({ ok: false });
+
+  const d = new Date(lic.expire);
   d.setDate(d.getDate() + Number(days));
-  db[key].expire = d.toISOString().slice(0, 10);
+
+  db.prepare(
+    "UPDATE licenses SET expire = ? WHERE key = ?"
+  ).run(d.toISOString().slice(0, 10), key);
 
   res.json({ ok: true, action: "extend", key });
 });
 
 app.post("/admin/ban", adminAuth, (req, res) => {
   const { key, state } = req.body;
-  if (!db[key]) return res.json({ ok: false });
 
-  db[key].banned = state === true;
-  res.json({ ok: true, action: "ban", key, banned: db[key].banned });
+  db.prepare(
+    "UPDATE licenses SET banned = ? WHERE key = ?"
+  ).run(state ? 1 : 0, key);
+
+  res.json({ ok: true, action: "ban", key });
 });
 
 app.post("/admin/delete", adminAuth, (req, res) => {
-  delete db[req.body.key];
+  db.prepare(
+    "DELETE FROM licenses WHERE key = ?"
+  ).run(req.body.key);
+
   res.json({ ok: true, action: "delete" });
 });
 
 app.get("/admin/list", adminAuth, (req, res) => {
-  res.json(db);
+  const rows = db
+    .prepare("SELECT * FROM licenses")
+    .all();
+
+  res.json(rows);
 });
 
 // ================== STATIC ==================
 app.use("/script", express.static("public/script"));
 app.use(express.static("public"));
+
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public/admin/index.html"));
 });
