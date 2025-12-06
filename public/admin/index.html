@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>What Are You Doing?</title>
+  <title>License Admin</title>
   <style>
     body {
       background:#0f0f16;
@@ -11,7 +11,7 @@
       justify-content:center;
       align-items:center;
       height:100vh;
-      font-family:Arial;
+      font-family:Arial, sans-serif;
     }
     .box {
       background:#1b1b2a;
@@ -29,7 +29,7 @@
     }
     button {
       width:100%;
-      margin:6px 0;
+      margin:4px 0;
       padding:8px;
       border:none;
       border-radius:6px;
@@ -37,32 +37,38 @@
       color:white;
       cursor:pointer;
     }
-    button.gray { background:#444; }
-    button.red { background:#c0392b; }
+    button.gray {
+      background:#444;
+    }
+    button.red {
+      background:#d9534f;
+    }
     pre {
       text-align:left;
-      background:#0f0f16;
+      background:#111521;
       padding:8px;
       border-radius:6px;
-      max-height:150px;
+      max-height:200px;
       overflow:auto;
+      font-size:11px;
     }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h3>🔐 Admin Only</h3>
+  <h3>🔐 License Admin</h3>
 
   <input id="token" type="password" placeholder="Admin Token">
-  <input id="key" placeholder="License Key">
-  <input id="days" type="number" placeholder="Days (Add license)">
 
-  <button onclick="add()">Add License</button>
+  <input id="key" placeholder="License Key">
+  <input id="days" type="number" placeholder="Days (for Add)">
+
+  <button onclick="addLic()">Add / Set License</button>
   <button onclick="ban()">Ban License</button>
   <button onclick="unban()">Unban License</button>
   <button class="red" onclick="resetHwid()">Reset HWID</button>
-  <button class="gray" onclick="list()">List Licenses</button>
+  <button class="gray" onclick="backup()">Download JSON</button>
 
   <pre id="out"></pre>
 </div>
