@@ -121,6 +121,14 @@ app.post("/admin/ban", adminAuth, (req, res) => {
   );
 });
 
+app.post("/admin/reset-hwid", adminAuth, (req, res) => {
+  db.run(
+    "UPDATE licenses SET hwid_hash=NULL WHERE key=?",
+    [req.body.key],
+    () => res.json({ ok: true, action: "reset_hwid" })
+  );
+});
+
 app.post("/admin/unban", adminAuth, (req, res) => {
   db.run(
     "UPDATE licenses SET banned=0 WHERE key=?",
