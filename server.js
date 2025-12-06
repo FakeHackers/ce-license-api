@@ -32,7 +32,7 @@ app.get("/check", (req, res) => {
     console.log(`Bind key ${key} ke hwid ${hwid}`);
   } else if (lic.hwid !== hwid) {
     // beda device
-    return res.send("ERROR|HWID_MISMATCH|" + lic.hwid);
+    return res.send("ERROR|HWID_MISMATCH|");
   }
 
   // sukses
