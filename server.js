@@ -135,9 +135,19 @@ app.get("/admin/logs", adminAuth, (req, res) => {
   );
 });
 
-// ✅ BACKUP DB
-app.get("/admin/backup", adminAuth, (req, res) => {
-  res.download(path.join(__dirname, "license.db"), "license-backup.db");
+// ================= ADMIN DOWNLOAD DB =================
+app.get("/admin/download-db", adminAuth, (req, res) => {
+  const dbPath = path.join(__dirname, "license.db");
+
+  if (!fs.existsSync(dbPath)) {
+    return res.status(404).json({ error: "DB_NOT_FOUND" });
+  }
+
+  res.download(dbPath, "license-backup.db", (err) => {
+    if (err) {
+      console.error("Download error:", err);
+    }
+  });
 });
 
 // ================= STATIC =================
