@@ -1,6 +1,7 @@
 {
   "name": "ce-license-api",
   "version": "1.0.0",
+  "description": "Cheat Engine License API with Admin Panel",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -8,6 +9,9 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "better-sqlite3": "^9.4.0"
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
