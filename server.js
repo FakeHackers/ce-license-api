@@ -121,6 +121,14 @@ app.post("/admin/ban", adminAuth, (req, res) => {
   );
 });
 
+app.post("/admin/unban", adminAuth, (req, res) => {
+  db.run(
+    "UPDATE licenses SET banned=0 WHERE key=?",
+    [req.body.key],
+    () => res.json({ ok: true, action: "unban" })
+  );
+});
+
 app.post("/admin/delete", adminAuth, (req, res) => {
   db.run("DELETE FROM licenses WHERE key=?", [req.body.key]);
   res.json({ ok: true });
