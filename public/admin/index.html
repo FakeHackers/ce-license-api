@@ -1,18 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Admin License</title>
+<meta charset="utf-8">
+<title>Admin Panel</title>
+<style>
+body {
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+}
+.container {
+  width:420px;
+  margin:120px auto;
+  background:#1e1e1e;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+}
+input, button {
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+  border-radius:5px;
+  border:none;
+}
+button {
+  background:#ff5c8a;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
-  <h2>Admin Panel</h2>
 
-  <input id="key" placeholder="License Key"><br><br>
-  <input id="days" type="number" placeholder="Tambah hari"><br><br>
-  <button onclick="addKey()">Add License</button>
+<div class="container">
+  <h2>Admin License Panel</h2>
+
+  <input id="token" type="password" placeholder="Admin Token">
+  <input id="key" placeholder="License Key">
+  <input id="days" type="number" placeholder="Days (+)">
+
+  <button onclick="add()">Add Key</button>
+  <button onclick="extend()">Extend</button>
+  <button onclick="ban(true)">Ban</button>
+  <button onclick="ban(false)">Unban</button>
+  <button onclick="del()">Delete</button>
 
   <pre id="out"></pre>
+</div>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
