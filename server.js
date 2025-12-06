@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const ADMIN_TOKEN = "HUTAO_ISTRI_HIRO";
 
 db = {
   "HUTAO1": { expire: "2026-12-31", hwid: null },
