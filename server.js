@@ -1,12 +1,24 @@
 const express = require("express");
+const path = require("path");
+
 const app = express();
 const ADMIN_TOKEN = "HUTAO_ISTRI_HIRO";
 
-db = {
+// ================== DATABASE (sementara) ==================
+const db = {
   "HUTAO1": { expire: "2026-12-31", hwid: null },
 };
 
-// ====== API LICENSE ======
+// ================== PUBLIC ==================
+app.use(express.static("public"));
+app.use("/script", express.static("public/script"));
+
+// ================== ADMIN PANEL ==================
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/admin/index.html"));
+});
+
+// ================== LICENSE API ==================
 app.get("/check", (req, res) => {
   const key  = req.query.key;
   const hwid = req.query.hwid;
@@ -20,28 +32,23 @@ app.get("/check", (req, res) => {
     return res.send("ERROR|NO_KEY|");
   }
 
-  // cek expire pakai waktu server
   const today = new Date().toISOString().slice(0, 10);
   if (today > lic.expire) {
     return res.send("ERROR|EXPIRED|" + lic.expire);
   }
 
-  // BIND HWID
+  // bind HWID
   if (!lic.hwid) {
-    // pertama kali dipakai → bind ke HWID ini
     lic.hwid = hwid;
-    console.log(`Bind key ${key} ke hwid ${hwid}`);
+    console.log(`Bind key ${key}`);
   } else if (lic.hwid !== hwid) {
-    // beda device
     return res.send("ERROR|HWID_MISMATCH|");
   }
 
-  // sukses
   return res.send("VALID|OK|" + lic.expire);
 });
 
-// serve encrypted script
-app.use("/script", express.static("public/script"));
-
+// ================== RUN ==================
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("License API running on port", PORT));
+app.listen(PORT, () =>
+  console.log("✅ License
