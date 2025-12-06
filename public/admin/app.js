@@ -1,4 +1,4 @@
-function getToken() {
+function token() {
   const t = document.getElementById("token").value;
   if (!t) {
     alert("Admin Token required");
@@ -7,18 +7,29 @@ function getToken() {
   return t;
 }
 
-function post(url, data) {
+function post(url, body) {
   return fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-token": getToken()
+      "x-admin-token": token()
     },
-    body: JSON.stringify(data || {})
+    body: JSON.stringify(body || {})
   }).then(r => r.json());
 }
 
-// ===== ACTIONS =====
+function get(url) {
+  return fetch(url, {
+    headers: { "x-admin-token": token() }
+  }).then(r => r.json());
+}
+
+function show(res) {
+  document.getElementById("out").textContent =
+    JSON.stringify(res, null, 2);
+}
+
+// ===== Actions =====
 function add() {
   post("/admin/add", {
     key: key.value,
@@ -27,43 +38,17 @@ function add() {
 }
 
 function ban() {
-  post("/admin/ban", {
-    key: key.value
-  }).then(show);
+  post("/admin/ban", { key: key.value }).then(show);
 }
 
 function unban() {
-  post("/admin/unban", {
-    key: key.value
-  }).then(show);
+  post("/admin/unban", { key: key.value }).then(show);
 }
 
 function resetHwid() {
-  post("/admin/reset-hwid", {
-    key: key.value
-  }).then(show);
+  post("/admin/reset-hwid", { key: key.value }).then(show);
 }
 
-
-
-// DOWNLOAD DB (GET + HEADER)
-function backup() {
-  fetch("/admin/download-db", {
-    headers: {
-      "x-admin-token": getToken()
-    }
-  })
-  .then(resp => resp.blob())
-  .then(blob => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "license-backup.db";
-    a.click();
-  });
-}
-
-// OUTPUT
-function show(res) {
-  document.getElementById("out").textContent =
-    JSON.stringify(res, null, 2);
+function list() {
+  get("/admin/list").then(show);
 }
