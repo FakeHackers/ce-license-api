@@ -8,10 +8,10 @@ app.use(express.urlencoded({ extended: true }));
 // =============== CONFIG ===============
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 const GH_TOKEN = process.env.GH_TOKEN;                 // PAT GitHub
-const GH_REPO_OWNER = process.env.GH_REPO_OWNER || "FakeHackers";
-const GH_REPO_NAME  = process.env.GH_REPO_NAME  || "ce-license-store";
-const GH_FILE_PATH  = process.env.GH_FILE_PATH  || "licenses.json";
-const GH_BRANCH     = process.env.GH_BRANCH     || "main";
+const GH_REPO_OWNER = process.env.GH_REPO_OWNER;
+const GH_REPO_NAME  = process.env.GH_REPO_NAME;
+const GH_FILE_PATH  = process.env.GH_FILE_PATH;
+const GH_BRANCH     = process.env.GH_BRANCH;
 
 if (!ADMIN_TOKEN) throw new Error("ADMIN_TOKEN NOT SET");
 if (!GH_TOKEN) throw new Error("GH_TOKEN NOT SET");
