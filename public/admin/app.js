@@ -48,19 +48,22 @@ function ban() {
   }).then(show).catch(show);
 }
 
-function delLicense() {
+function del() {
+  const licenseKey = document.getElementById("key").value;
+
+  if (!licenseKey) {
+    alert("License Key kosong");
+    return;
+  }
+
   post("/admin/delete", {
-    key: key.value
+    key: licenseKey
   }).then(res => {
-    if (res.ok) {
-      document.getElementById("out").textContent =
-        "✅ OK\nLicense key deleted:\n" + res.key;
-    } else {
-      document.getElementById("out").textContent =
-        "❌ FAILED\n" + (res.message || res.error);
-    }
+    document.getElementById("out").textContent =
+      JSON.stringify(res, null, 2);
   });
 }
+
 
 function unban() {
   post("/admin/unban", {
