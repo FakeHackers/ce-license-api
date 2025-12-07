@@ -48,23 +48,6 @@ function ban() {
   }).then(show).catch(show);
 }
 
-function del() {
-  const licenseKey = document.getElementById("key").value;
-
-  if (!licenseKey) {
-    alert("License Key kosong");
-    return;
-  }
-
-  post("/admin/delete", {
-    key: licenseKey
-  }).then(res => {
-    document.getElementById("out").textContent =
-      JSON.stringify(res, null, 2);
-  });
-}
-
-
 function unban() {
   post("/admin/unban", {
     key: document.getElementById("key").value.trim()
