@@ -172,6 +172,23 @@ app.post("/admin/ban", adminAuth, async (req, res) => {
   }
 });
 
+app.post("/admin/delete", adminAuth, (req, res) => {
+  const { key } = req.body;
+  if (!key) return res.json({ error: "NO_KEY" });
+
+  db.run(
+    "DELETE FROM licenses WHERE key=?",
+    [key],
+    function () {
+      res.json({
+        ok: true,
+        deleted: this.changes
+      });
+    }
+  );
+});
+
+
 app.post("/admin/unban", adminAuth, async (req, res) => {
   try {
     const { key } = req.body;
