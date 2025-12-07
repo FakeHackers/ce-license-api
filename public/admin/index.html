@@ -1,223 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>License Admin</title>
   <style>
-    /* ———— Animasi Bintang Jatuh ———— */
-    @keyframes shooting-star {
-      0% {
-        opacity: 0;
-        transform: translateX(0) translateY(0) rotate(20deg);
-      }
-      10% {
-        opacity: 1;
-      }
-      90% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translateX(calc(-100vw - 100px)) translateY(100px) rotate(20deg);
-      }
-    }
-
-    .shooting-star {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 2px;
-      height: 2px;
-      background: white;
-      border-radius: 50%;
-      box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.8),
-                  0 0 20px 2px rgba(255, 255, 255, 0.5);
-      animation: shooting-star 3s linear forwards;
-      z-index: -1;
-    }
-
-    /* ———— Background Langit Malam ———— */
     body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(ellipse at bottom, #0b0b12 0%, #0f0f16 60%, #13131d 100%);
-      color: #e0e0ff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-      position: relative;
+      background:#0f0f16;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      font-family:Arial, sans-serif;
     }
-
-    /* Noise texture halus untuk realisme */
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-      opacity: 0.03;
-      pointer-events: none;
-    }
-
-    /* ———— Kotak Utama ———— */
     .box {
-      background: rgba(22, 22, 38, 0.75);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 30px;
-      border-radius: 16px;
-      width: 95%;
-      max-width: 400px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
-                  inset 0 0 0 1px rgba(100, 100, 200, 0.1);
-      border: 1px solid rgba(80, 80, 150, 0.2);
-      position: relative;
-      z-index: 10;
+      background:#1b1b2a;
+      padding:20px;
+      border-radius:10px;
+      width:360px;
+      text-align:center;
     }
-
-    .box h3 {
-      margin: 0 0 24px 0;
-      font-weight: 600;
-      font-size: 1.6rem;
-      color: #ffffff;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    }
-
-    /* ———— Form Input ———— */
-    .input-group {
-      margin-bottom: 16px;
-      text-align: left;
-    }
-
-    .input-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 0.85rem;
-      color: #a8b0d4;
-      font-weight: 500;
-    }
-
     input {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 8px;
-      border: 1px solid rgba(100, 100, 180, 0.3);
-      background: rgba(15, 15, 30, 0.6);
-      color: white;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      box-sizing: border-box;
+      width:100%;
+      padding:8px;
+      margin:6px 0;
+      border-radius:6px;
+      border:none;
     }
-
-    input:focus {
-      outline: none;
-      border-color: #6a7bff;
-      box-shadow: 0 0 0 3px rgba(106, 123, 255, 0.2);
+    button {
+      width:100%;
+      margin:4px 0;
+      padding:8px;
+      border:none;
+      border-radius:6px;
+      background:#ff5c8a;
+      color:white;
+      cursor:pointer;
     }
-
-    input::placeholder {
-      color: #6a729e;
+    button.gray {
+      background:#444;
     }
-
-    /* ———— Tombol ———— */
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px 0;
+    button.red {
+      background:#d9534f;
     }
-
-    .btn {
-      flex: 1 1 calc(50% - 5px);
-      min-width: 140px;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .btn:hover::after {
-      opacity: 1;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary { background: #6a7bff; }
-    .btn-warning { background: #ff6b6b; }
-    .btn-danger  { background: #ff5c8a; }
-    .btn-secondary { background: #5a5a72; }
-
-    .btn-primary:hover  { background: #7d8cff; }
-    .btn-warning:hover  { background: #ff8282; }
-    .btn-danger:hover   { background: #ff709a; }
-    .btn-secondary:hover { background: #696985; }
-
-    /* ———— Output Area ———— */
     pre {
-      text-align: left;
-      background: rgba(12, 12, 26, 0.7);
-      padding: 14px;
-      border-radius: 10px;
-      max-height: 200px;
-      overflow: auto;
-      font-size: 12px;
-      font-family: 'Courier New', monospace;
-      margin-top: 20px;
-      border: 1px solid rgba(100, 100, 180, 0.2);
-      color: #e2e8f0;
-    }
-
-    /* Scrollbar halus */
-    pre::-webkit-scrollbar {
-      width: 6px;
-    }
-    pre::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-    }
-    pre::-webkit-scrollbar-thumb {
-      background: #4a5578;
-      border-radius: 3px;
-    }
-
-    /* Animasi masuk halus */
-    .box {
-      animation: fadeInUp 0.6s ease-out;
-    }
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      text-align:left;
+      background:#111521;
+      padding:8px;
+      border-radius:6px;
+      max-height:200px;
+      overflow:auto;
+      font-size:11px;
     }
   </style>
 </head>
@@ -226,68 +59,19 @@
 <div class="box">
   <h3>🔐 License Admin</h3>
 
-  <div class="input-group">
-    <label for="token">Admin Token</label>
-    <input id="token" type="password" placeholder="••••••••">
-  </div>
+  <input id="token" type="password" placeholder="Admin Token">
+  <input id="key" placeholder="License Key">
+  <input id="days" type="number" placeholder="Days (for Add)">
 
-  <div class="input-group">
-    <label for="key">License Key</label>
-    <input id="key" placeholder="e.g. ABCD-EFGH-IJKL-MNOP">
-  </div>
+  <button onclick="addLic()">Add / Set License</button>
+  <button onclick="ban()">Ban License</button>
+  <button onclick="unban()">Unban License</button>
+  <button class="red" onclick="resetHwid()">Reset HWID</button>
+  <button class="gray" onclick="backup()">Download JSON</button>
 
-  <div class="input-group">
-    <label for="days">Days (for Add)</label>
-    <input id="days" type="number" min="1" placeholder="30">
-  </div>
-
-  <div class="btn-group">
-    <button class="btn btn-primary" onclick="addLic()">Add / Set License</button>
-    <button class="btn btn-secondary" onclick="ban()">Ban License</button>
-    <button class="btn btn-secondary" onclick="unban()">Unban License</button>
-    <button class="btn btn-danger" onclick="resetHwid()">Reset HWID</button>
-    <button class="btn btn-secondary" onclick="backup()">Download JSON</button>
-  </div>
-
-  <pre id="out">// Output akan muncul di sini...</pre>
+  <pre id="out"></pre>
 </div>
 
-<script>
-  // ✨ Generator bintang jatuh otomatis
-  function createShootingStar() {
-    const star = document.createElement('div');
-    star.classList.add('shooting-star');
-
-    // Posisi acak di atas layar
-    const startX = Math.random() * window.innerWidth;
-    const startY = -20 - Math.random() * 100;
-    star.style.left = `${startX}px`;
-    star.style.top = `${startY}px`;
-
-    // Durasi acak: 2–5 detik
-    const duration = 2 + Math.random() * 3;
-    star.style.animationDuration = `${duration}s`;
-
-    // Tambahkan ke body
-    document.body.appendChild(star);
-
-    // Hapus setelah animasi selesai
-    setTimeout(() => {
-      star.remove();
-    }, duration * 1000);
-  }
-
-  // Buat 1–2 bintang per detik
-  setInterval(() => {
-    if (Math.random() > 0.3) createShootingStar(); // ~70% chance per interval
-  }, 800);
-
-  // Buat langsung beberapa bintang saat load
-  for (let i = 0; i < 5; i++) {
-    setTimeout(createShootingStar, i * 300);
-  }
-
-  // ———— Placeholder fungsi JS (biar tidak error) ————
 <script src="app.js"></script>
 </body>
 </html>
