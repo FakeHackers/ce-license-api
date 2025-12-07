@@ -174,19 +174,30 @@ app.post("/admin/ban", adminAuth, async (req, res) => {
 
 app.post("/admin/delete", adminAuth, (req, res) => {
   const { key } = req.body;
-  if (!key) return res.json({ error: "NO_KEY" });
+  if (!key) {
+    return res.json({ ok: false, error: "NO_KEY" });
+  }
 
   db.run(
-    "DELETE FROM licenses WHERE key=?",
+    "DELETE FROM licenses WHERE key = ?",
     [key],
     function () {
+      if (this.changes === 0) {
+        return res.json({
+          ok: false,
+          message: "Key not found"
+        });
+      }
+
       res.json({
         ok: true,
-        deleted: this.changes
+        message: "License deleted",
+        key: key
       });
     }
   );
 });
+
 
 
 app.post("/admin/unban", adminAuth, async (req, res) => {
