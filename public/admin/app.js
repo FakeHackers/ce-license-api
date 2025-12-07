@@ -1,5 +1,5 @@
 function getToken() {
-  const t = document.getElementById("token").value.trim();
+  const t = document.getElementById("token").value;
   if (!t) {
     alert("Admin Token required");
     throw "NO_TOKEN";
@@ -15,18 +15,7 @@ function post(url, data) {
       "x-admin-token": getToken()
     },
     body: JSON.stringify(data || {})
-  })
-  .then(async r => {
-    const txt = await r.text();
-    let json;
-    try { json = JSON.parse(txt); }
-    catch { json = { raw: txt }; }
-
-    if (!r.ok) {
-      throw json || { error: "HTTP_" + r.status };
-    }
-    return json;
-  });
+  }).then(r => r.json());
 }
 
 function show(res) {
@@ -34,43 +23,35 @@ function show(res) {
     JSON.stringify(res, null, 2);
 }
 
-// ==== ACTIONS ====
+// ===== ACTIONS =====
 function addLic() {
   post("/admin/add", {
-    key: document.getElementById("key").value.trim(),
-    days: Number(document.getElementById("days").value || 0)
-  }).then(show).catch(show);
+    key: key.value,
+    days: days.value
+  }).then(show);
 }
 
 function ban() {
-  post("/admin/ban", {
-    key: document.getElementById("key").value.trim()
-  }).then(show).catch(show);
+  post("/admin/ban", { key: key.value }).then(show);
 }
 
 function unban() {
-  post("/admin/unban", {
-    key: document.getElementById("key").value.trim()
-  }).then(show).catch(show);
+  post("/admin/unban", { key: key.value }).then(show);
 }
 
 function resetHwid() {
-  post("/admin/reset-hwid", {
-    key: document.getElementById("key").value.trim()
-  }).then(show).catch(show);
+  post("/admin/reset-hwid", { key: key.value }).then(show);
 }
 
-// download JSON (GET + header)
 function backup() {
-  const token = getToken();
-  fetch("/admin/download-db", {
-    headers: { "x-admin-token": token }
+  fetch("/admin/download-json", {
+    headers: { "x-admin-token": getToken() }
   })
-    .then(r => r.blob())
-    .then(blob => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "licenses.json";
-      a.click();
-    });
+  .then(r => r.text())
+  .then(t => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([t], { type:"application/json" }));
+    a.download = "licenses.json";
+    a.click();
+  });
 }
