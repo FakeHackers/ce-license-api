@@ -50,7 +50,6 @@ function ban() {
 
 function delLicense() {
   if (!confirm("Delete this license?")) return;
-
   post("/admin/delete", {
     key: key.value
   }).then(show);
