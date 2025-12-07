@@ -49,12 +49,18 @@ function ban() {
 }
 
 function delLicense() {
-  if (!confirm("Delete this license?")) return;
   post("/admin/delete", {
     key: key.value
-  }).then(show);
+  }).then(res => {
+    if (res.ok) {
+      document.getElementById("out").textContent =
+        "✅ OK\nLicense key deleted:\n" + res.key;
+    } else {
+      document.getElementById("out").textContent =
+        "❌ FAILED\n" + (res.message || res.error);
+    }
+  });
 }
-
 
 function unban() {
   post("/admin/unban", {
