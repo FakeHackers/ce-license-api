@@ -48,6 +48,15 @@ function ban() {
   }).then(show).catch(show);
 }
 
+function delLicense() {
+  if (!confirm("Delete this license?")) return;
+
+  post("/admin/delete", {
+    key: key.value
+  }).then(show);
+}
+
+
 function unban() {
   post("/admin/unban", {
     key: document.getElementById("key").value.trim()
