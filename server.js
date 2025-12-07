@@ -172,37 +172,6 @@ app.post("/admin/ban", adminAuth, async (req, res) => {
   }
 });
 
-app.post("/admin/delete", adminAuth, async (req, res) => {
-  const { key } = req.body;
-  if (!key) return res.json({ ok: false, error: "NO_KEY" });
-
-  try {
-    const data = await getLicenses();   // ← ambil licenses.json
-    if (!data[key]) {
-      return res.json({
-        ok: false,
-        message: "License tidak ditemukan"
-      });
-    }
-
-    delete data[key];                  // ← hapus key
-
-    await saveLicenses(data);           // ← push ke GitHub
-
-    res.json({
-      ok: true,
-      message: "License berhasil dihapus",
-      key
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      ok: false,
-      error: "DELETE_FAILED"
-    });
-  }
-});
-
 app.post("/admin/unban", adminAuth, async (req, res) => {
   try {
     const { key } = req.body;
