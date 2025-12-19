@@ -187,6 +187,49 @@ app.post("/admin/unban", adminAuth, async (req, res) => {
   }
 });
 
+app.post("/admin/adjust-exp", adminAuth, async (req, res) => {
+  try {
+    const { key, days } = req.body;
+    if (!key || typeof days !== "number") {
+      return res.json({ ok: false, error: "PARAM" });
+    }
+
+    const licenses = await getLicenses();
+
+    if (!licenses[key]) {
+      return res.json({ ok: false, error: "KEY_NOT_FOUND" });
+    }
+
+    const oldExpire = licenses[key].expire;
+    const baseDate = new Date(oldExpire);
+
+    if (isNaN(baseDate.getTime())) {
+      return res.json({ ok: false, error: "INVALID_EXPIRE" });
+    }
+
+    baseDate.setDate(baseDate.getDate() + Number(days));
+    const newExpire = baseDate.toISOString().slice(0, 10);
+
+    licenses[key].expire = newExpire;
+
+    await githubSaveFile(licenses);
+
+    res.json({
+      ok: true,
+      action: "adjust-exp",
+      key,
+      old_expire: oldExpire,
+      new_expire: newExpire,
+      changed_by_days: days
+    });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER" });
+  }
+});
+
+
 app.post("/admin/reset-hwid", adminAuth, async (req, res) => {
   try {
     const { key } = req.body;
