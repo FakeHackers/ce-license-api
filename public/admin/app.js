@@ -42,6 +42,14 @@ function addLic() {
   }).then(show).catch(show);
 }
 
+function adjustExp() {
+  post("/admin/adjust-exp", {
+    key: document.getElementById("key").value.trim(),
+    days: Number(document.getElementById("days").value || 0)
+  }).then(show).catch(show);
+}
+
+
 function ban() {
   post("/admin/ban", {
     key: document.getElementById("key").value.trim()
